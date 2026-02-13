@@ -801,11 +801,65 @@ async function applyGlobalColors(dir, colorReplacements) {
 // ═══════════════════════════════════════════════════════
 // ENV FILE
 // ═══════════════════════════════════════════════════════
-async function createEnvFile(dir) {
-  await writeFile(
-    path.join(dir, ".env"),
-    `PUBLIC_TOKEN=""\nRESEND_API_KEY=""\nPUBLIC_HCAPTCHA_SITE_KEY=""\n`
-  );
+async function createEnvFile(dir, turnstileKeys) {
+  let content = `VENPU_API_URL="https://api.venpu.cl"\nVENPU_API_KEY=""\nRESEND_API_KEY=""\n`;
+  if (turnstileKeys) {
+    content += `PUBLIC_TURNSTILE_SITE_KEY="${turnstileKeys.sitekey}"\nTURNSTILE_SECRET_KEY="${turnstileKeys.secret}"\n`;
+  } else {
+    content += `PUBLIC_TURNSTILE_SITE_KEY=""\nTURNSTILE_SECRET_KEY=""\n`;
+  }
+  await writeFile(path.join(dir, ".env"), content);
+}
+
+// ═══════════════════════════════════════════════════════
+// CLOUDFLARE TURNSTILE WIDGET CREATION
+// ═══════════════════════════════════════════════════════
+async function createTurnstileWidget(config) {
+  const apiToken = process.env.CLOUDFLARE_API_TOKEN;
+  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+
+  if (!apiToken || !accountId) {
+    console.log("    (Omitido: CLOUDFLARE_API_TOKEN o CLOUDFLARE_ACCOUNT_ID no disponibles)");
+    return null;
+  }
+
+  const domain = config.domain.replace(/^www\./, "");
+  const domains = [domain, `www.${domain}`, `${config.slug}.pages.dev`];
+
+  try {
+    const res = await fetch(
+      `https://api.cloudflare.com/client/v4/accounts/${accountId}/challenges/widgets`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: config.name,
+          domains,
+          mode: "managed",
+          bot_fight_mode: false,
+        }),
+      }
+    );
+
+    const json = await res.json();
+    if (!json.success) {
+      console.log(`    Error creando widget: ${JSON.stringify(json.errors)}`);
+      return null;
+    }
+
+    console.log(`    Widget creado: ${json.result.sitekey}`);
+    console.log(`    Dominios: ${domains.join(", ")}`);
+    return {
+      sitekey: json.result.sitekey,
+      secret: json.result.secret,
+    };
+  } catch (err) {
+    console.log(`    Error de red: ${err.message}`);
+    return null;
+  }
 }
 
 // ═══════════════════════════════════════════════════════
@@ -843,7 +897,7 @@ function printSummary(config) {
   Proximos pasos:
     cd ${config.slug}
     npm install
-    # Configurar variables en .env (PUBLIC_TOKEN, RESEND_API_KEY, PUBLIC_HCAPTCHA_SITE_KEY)
+    # Configurar variables en .env (VENPU_API_KEY, RESEND_API_KEY)
     npm run dev
 
   Imagenes por reemplazar:
@@ -897,11 +951,11 @@ async function main() {
   console.log(`\n  Creando sitio "${config.name}" en ${config.slug}/...\n`);
 
   // Step 1: Copy template
-  console.log("  [1/5] Copiando template wildcars...");
+  console.log("  [1/6] Copiando template...");
   await copyDir(TEMPLATE_DIR, destDir);
 
   // Step 2: Apply file-specific transformations
-  console.log("  [2/5] Personalizando archivos...");
+  console.log("  [2/6] Personalizando archivos...");
   await transformPackageJson(destDir, config);
   await transformLayout(destDir, config);
   await transformNavbar(destDir, config);
@@ -918,16 +972,20 @@ async function main() {
   await transformWhatsapp(destDir, config);
 
   // Step 3: Apply color theme globally
-  console.log("  [3/5] Aplicando esquema de colores...");
+  console.log("  [3/6] Aplicando esquema de colores...");
   const colorReplacements = getColorReplacements(config.colors.tailwind);
   await applyGlobalColors(destDir, colorReplacements);
 
-  // Step 4: Create .env
-  console.log("  [4/5] Creando .env...");
-  await createEnvFile(destDir);
+  // Step 4: Create Turnstile widget (if Cloudflare credentials available)
+  console.log("  [4/6] Creando widget Cloudflare Turnstile...");
+  const turnstileKeys = await createTurnstileWidget(config);
 
-  // Step 5: Save config reference
-  console.log("  [5/5] Guardando configuracion...");
+  // Step 5: Create .env
+  console.log("  [5/6] Creando .env...");
+  await createEnvFile(destDir, turnstileKeys);
+
+  // Step 6: Save config reference
+  console.log("  [6/6] Guardando configuracion...");
   await writeFile(
     path.join(destDir, "site.config.json"),
     JSON.stringify(config, null, 2)

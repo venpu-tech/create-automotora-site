@@ -1,10 +1,14 @@
-interface ImportMetaEnv {
-  readonly PUBLIC_TOKEN: string;
-  readonly RESEND_API_KEY: string;
-  readonly PUBLIC_HCAPTCHA_SITE_KEY: string;
-  // más variables de entorno si las hay...
+/// <reference types="astro/client" />
+
+type Runtime = import("@astrojs/cloudflare").Runtime<Env>;
+
+interface Env {
+  VENPU_API_URL: string;
+  VENPU_API_KEY: string;
+  RESEND_API_KEY: string;
+  TURNSTILE_SECRET_KEY: string;
 }
 
-interface ImportMeta {
-  readonly env: ImportMetaEnv;
+declare namespace App {
+  interface Locals extends Runtime {}
 }

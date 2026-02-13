@@ -1,0 +1,468 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getVehicleByCode } from '../../lib/api';
+import { formatPrice } from "../../helpers/formatHelpers";
+
+export const prerender = false;
+
+const { code } = Astro.params || {};
+
+if (!code) {
+  return Astro.redirect('/catalogo');
+}
+
+const vehicle = await getVehicleByCode(code);
+
+if (!vehicle) {
+  return Astro.redirect('/catalogo');
+}
+
+const formattedPrice = formatPrice(vehicle.price);
+const isAvailable = vehicle.status === 'available';
+
+// Extract image URLs from the images array
+const vehicleImages = vehicle.images.length > 0
+  ? vehicle.images
+      .sort((a, b) => a.order - b.order)
+      .map(img => img.url)
+      .filter(Boolean)
+  : ['/placeholder.webp'];
+
+const ogImage = vehicleImages[0];
+const locationName = vehicle.comuna?.name ?? vehicle.region?.name ?? 'No especificada';
+---
+
+<Layout title={`${vehicle.title} - Auto Loa`} description={`${vehicle.title} - ${formattedPrice}`} image={ogImage}>
+
+  <main class="md:w-7xl mx-auto py-[80px] md:py-[120px] px-5 md:px-10">
+
+     <nav class="text-sm text-gray-600 py-3">
+        <a href="/" class="hover:text-blue-600">Inicio</a>
+        <span class="mx-2">></span>
+        <a href="/catalogo" class="hover:text-blue-600">Vehículos</a>
+        <span class="mx-2">></span>
+        <span class="text-gray-900">{vehicle.title}</span>
+      </nav>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+      <!-- Columna Izquierda - Galería de Imágenes -->
+      <div class="lg:col-span-2">
+        <div class="bg-white rounded-lg shadow-sm border-gray-200 border p-4 mb-6">
+          <!-- Galería con Thumbnails al lado izquierdo -->
+          <div class="flex gap-4">
+            <!-- Thumbnails Verticales -->
+            {vehicleImages.length > 1 && (
+              <div class="flex flex-col w-20 md:w-24">
+                <!-- Botón de scroll hacia arriba -->
+                {vehicleImages.length > 6 && (
+                  <button
+                    id="scroll-up-btn"
+                    class="w-full bg-white hover:bg-gray-50 text-gray-700 py-2 rounded-t border border-gray-100 transition-colors shadow-sm mb-1 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                    aria-label="Ver imágenes anteriores"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+                    </svg>
+                  </button>
+                )}
+
+                <div class="flex flex-col gap-2 thumbnail-viewport" id="thumbnails-container">
+                  {vehicleImages.map((image, index) => (
+                    <button
+                      type="button"
+                      class={`thumbnail-btn w-full h-16 md:h-20 rounded border-2 transition-all duration-200 overflow-hidden flex-shrink-0 ${index === 0 ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-100 hover:border-blue-300'} ${index >= 6 ? 'hidden' : ''}`}
+                      data-index={index}
+                      data-image-src={image}
+                      aria-label={`Ver imagen ${index + 1}`}
+                    >
+                      <img
+                        src={image}
+                        alt={`${vehicle.title} - Miniatura ${index + 1}`}
+                        class="w-full h-full object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
+
+                <!-- Botón de scroll hacia abajo -->
+                {vehicleImages.length > 6 && (
+                  <button
+                    id="scroll-down-btn"
+                    class="w-full bg-white hover:bg-gray-50 text-gray-700 py-2 rounded-b border border-gray-100 transition-colors shadow-sm mt-1 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                    aria-label="Ver más imágenes"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                  </button>
+                )}
+              </div>
+            )}
+
+            <!-- Imagen Principal -->
+            <div class="relative flex-1">
+              <img
+                id="main-image"
+                src={vehicleImages[0]}
+                alt={`${vehicle.title} - Auto Loa`}
+                class="w-full h-full object-cover rounded-lg cursor-zoom-in transition-transform duration-300"
+              />
+
+              <!-- Contador de Imágenes -->
+              {vehicleImages.length > 1 && (
+                <div class="absolute top-4 right-4 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm">
+                  <span id="current-index">1</span> / {vehicleImages.length}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <!-- Características del Vehículo -->
+        <div class="bg-white rounded-lg shadow-sm border-gray-200 border p-6 mb-6">
+          <h2 class="text-2xl font-bold mb-4 text-gray-900">Características</h2>
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div class="flex items-center space-x-2">
+              <span class="text-gray-400">📅</span>
+              <div>
+                <p class="text-sm text-gray-600">Año</p>
+                <p class="font-semibold">{vehicle.year || 'N/A'}</p>
+              </div>
+            </div>
+            <div class="flex items-center space-x-2">
+              <span class="text-gray-400">🚗</span>
+              <div>
+                <p class="text-sm text-gray-600">Kilometraje</p>
+                <p class="font-semibold">{vehicle.kms?.toLocaleString()} km</p>
+              </div>
+            </div>
+            <div class="flex items-center space-x-2">
+              <span class="text-gray-400">⛽</span>
+              <div>
+                <p class="text-sm text-gray-600">Combustible</p>
+                <p class="font-semibold">{vehicle.fuel}</p>
+              </div>
+            </div>
+            <div class="flex items-center space-x-2">
+              <span class="text-gray-400">⚙️</span>
+              <div>
+                <p class="text-sm text-gray-600">Transmisión</p>
+                <p class="font-semibold">{vehicle.transmission || 'N/A'}</p>
+              </div>
+            </div>
+            <div class="flex items-center space-x-2">
+              <span class="text-gray-400">📍</span>
+              <div>
+                <p class="text-sm text-gray-600">Ubicación</p>
+                <p class="font-semibold">{locationName}</p>
+              </div>
+            </div>
+            <div class="flex items-center space-x-2">
+              <span class="text-gray-400">🏷️</span>
+              <div>
+                <p class="text-sm text-gray-600">Estado</p>
+                <p class={`font-semibold ${isAvailable ? 'text-green-600' : 'text-red-600'}`}>
+                  {isAvailable ? 'Disponible' : 'Vendido'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Descripción -->
+        <div class="bg-white rounded-lg shadow-sm border-gray-200 border p-6">
+          <h2 class="text-2xl font-bold mb-4 text-gray-900">Descripción</h2>
+          <div class="prose max-w-none text-gray-700">
+            <p class="mb-4">
+              {vehicle.description || `Este ${vehicle.title} es una excelente opción para quienes buscan un vehículo confiable y con gran desempeño. Con ${vehicle.kms?.toLocaleString()} kilómetros recorridos y motor ${vehicle.fuel}, representa una oportunidad única en el mercado.`}
+            </p>
+            <p>
+              El vehículo cuenta con transmisión {vehicle.transmission || 'no especificada'} y se encuentra en excelentes condiciones.
+              Ideal para uso familiar o trabajo, combina comodidad, seguridad y eficiencia en un solo paquete.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Columna Derecha - Información de Compra -->
+      <div class="lg:col-span-1">
+        <div class="sticky top-6">
+          <!-- Card de Precio y Compra -->
+          <div class="bg-white rounded-lg shadow-sm border-gray-200 border p-6 mb-6">
+            <div class="mb-4">
+              <h1 class="text-2xl font-bold text-gray-900 mb-2">{vehicle.title}</h1>
+              {isAvailable ? (
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                  ✓ Disponible
+                </span>
+              ) : (
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                  ✗ Vendido
+                </span>
+              )}
+            </div>
+
+            <div class="mb-6">
+              <p class="text-3xl font-bold text-gray-900">{formattedPrice}</p>
+              <p class="text-sm text-gray-600">Precio final</p>
+            </div>
+
+            <a
+              href="/contacto"
+              class={`w-full font-bold py-3 px-4 rounded-lg transition-colors text-center block ${
+                isAvailable
+                  ? 'bg-green-600 hover:bg-green-700 text-white'
+                  : 'bg-gray-400 text-gray-600 cursor-not-allowed'
+              }`}
+            >
+              Contactar vendedor
+            </a>
+          </div>
+
+          <!-- Medios de Pago -->
+          <div class="bg-white rounded-lg shadow-sm border-gray-200 border p-6">
+            <h3 class="text-lg font-bold mb-4">Medios de pago</h3>
+            <div class="space-y-3">
+              <div class="flex items-center space-x-2">
+                <span class="text-green-500">✓</span>
+                <span class="text-sm">Efectivo</span>
+              </div>
+              <div class="flex items-center space-x-2">
+                <span class="text-green-500">✓</span>
+                <span class="text-sm">Transferencia bancaria</span>
+              </div>
+              <div class="flex items-center space-x-2">
+                <span class="text-green-500">✓</span>
+                <span class="text-sm">Financiamiento disponible</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</Layout>
+
+<script is:inline>
+  document.addEventListener('DOMContentLoaded', function() {
+    let currentImageIndex = 0;
+    let currentPage = 0;
+    const thumbnailsPerPage = 6;
+
+    const mainImage = document.getElementById('main-image');
+    const thumbnails = document.querySelectorAll('.thumbnail-btn');
+    const currentIndexSpan = document.getElementById('current-index');
+    const scrollUpBtn = document.getElementById('scroll-up-btn');
+    const scrollDownBtn = document.getElementById('scroll-down-btn');
+    const thumbnailsContainer = document.getElementById('thumbnails-container');
+
+    const totalImages = thumbnails.length;
+    const totalPages = Math.ceil(totalImages / thumbnailsPerPage);
+
+    function showThumbnailsPage(page) {
+      if (page < 0 || page >= totalPages) return;
+      currentPage = page;
+      thumbnails.forEach((thumbnail, index) => {
+        const startIndex = page * thumbnailsPerPage;
+        const endIndex = startIndex + thumbnailsPerPage;
+        if (index >= startIndex && index < endIndex) {
+          thumbnail.classList.remove('hidden');
+        } else {
+          thumbnail.classList.add('hidden');
+        }
+      });
+      updateNavigationButtons();
+    }
+
+    function updateNavigationButtons() {
+      if (scrollUpBtn) scrollUpBtn.disabled = currentPage === 0;
+      if (scrollDownBtn) scrollDownBtn.disabled = currentPage === totalPages - 1;
+    }
+
+    function scrollThumbnails(direction) {
+      if (direction === 'up' && currentPage > 0) {
+        showThumbnailsPage(currentPage - 1);
+      } else if (direction === 'down' && currentPage < totalPages - 1) {
+        showThumbnailsPage(currentPage + 1);
+      }
+    }
+
+    function scrollToActiveThumbnail(index) {
+      if (!thumbnailsContainer || !thumbnails[index]) return;
+      const targetPage = Math.floor(index / thumbnailsPerPage);
+      if (targetPage !== currentPage) showThumbnailsPage(targetPage);
+    }
+
+    function changeMainImage(imageSrc, index) {
+      if (!mainImage || index < 0 || index >= totalImages) return;
+      currentImageIndex = index;
+      mainImage.style.opacity = '0.5';
+      setTimeout(() => {
+        mainImage.src = imageSrc;
+        mainImage.style.opacity = '1';
+      }, 150);
+      thumbnails.forEach((thumbnail, i) => {
+        const isActive = i === index;
+        thumbnail.classList.remove('border-blue-500', 'ring-2', 'ring-blue-200', 'border-gray-100', 'hover:border-blue-300');
+        if (isActive) {
+          thumbnail.classList.add('border-blue-500', 'ring-2', 'ring-blue-200');
+        } else {
+          thumbnail.classList.add('border-gray-100', 'hover:border-blue-300');
+        }
+      });
+      if (currentIndexSpan) currentIndexSpan.textContent = index + 1;
+      scrollToActiveThumbnail(index);
+    }
+
+    thumbnails.forEach((thumbnail, index) => {
+      thumbnail.addEventListener('click', function() {
+        const imageSrc = this.getAttribute('data-image-src');
+        if (imageSrc) changeMainImage(imageSrc, index);
+      });
+    });
+
+    if (scrollUpBtn) scrollUpBtn.addEventListener('click', () => scrollThumbnails('up'));
+    if (scrollDownBtn) scrollDownBtn.addEventListener('click', () => scrollThumbnails('down'));
+
+    if (thumbnailsContainer) {
+      thumbnailsContainer.addEventListener('wheel', function(e) {
+        e.preventDefault();
+        scrollThumbnails(e.deltaY > 0 ? 'down' : 'up');
+      });
+    }
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'ArrowUp') { e.preventDefault(); scrollThumbnails('up'); }
+      if (e.key === 'ArrowDown') { e.preventDefault(); scrollThumbnails('down'); }
+    });
+
+    if (totalImages > 0) showThumbnailsPage(0);
+
+    // Zoom modal
+    if (mainImage) {
+      mainImage.addEventListener('click', function() {
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4 cursor-pointer';
+
+        const zoomedImage = document.createElement('img');
+        zoomedImage.src = this.src;
+        zoomedImage.className = 'max-w-full max-h-full object-contain cursor-default transition-transform duration-300';
+        zoomedImage.onclick = (e) => e.stopPropagation();
+
+        let modalImageIndex = currentImageIndex;
+
+        const modalPrevBtn = document.createElement('button');
+        modalPrevBtn.innerHTML = '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>';
+        modalPrevBtn.className = 'absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-75 text-white p-3 rounded-full transition-all duration-300 z-10';
+        modalPrevBtn.style.display = totalImages > 1 ? 'block' : 'none';
+
+        const modalNextBtn = document.createElement('button');
+        modalNextBtn.innerHTML = '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>';
+        modalNextBtn.className = 'absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-75 text-white p-3 rounded-full transition-all duration-300 z-10';
+        modalNextBtn.style.display = totalImages > 1 ? 'block' : 'none';
+
+        const imageInfo = document.createElement('div');
+        imageInfo.className = 'absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white text-center z-10';
+        imageInfo.innerHTML = '<p class="text-lg font-semibold">' + mainImage.alt + '</p><p class="text-sm opacity-75">Imagen ' + (currentImageIndex + 1) + ' de ' + totalImages + '</p>';
+
+        const changeModalImage = (direction) => {
+          if (direction === 'next') modalImageIndex = (modalImageIndex + 1) % totalImages;
+          else if (direction === 'prev') modalImageIndex = (modalImageIndex - 1 + totalImages) % totalImages;
+          const newImageSrc = thumbnails[modalImageIndex]?.getAttribute('data-image-src');
+          if (newImageSrc) {
+            zoomedImage.style.opacity = '0.5';
+            setTimeout(() => {
+              zoomedImage.src = newImageSrc;
+              zoomedImage.style.opacity = '1';
+              changeMainImage(newImageSrc, modalImageIndex);
+              imageInfo.innerHTML = '<p class="text-lg font-semibold">' + (thumbnails[modalImageIndex]?.querySelector('img')?.alt || 'Imagen') + '</p><p class="text-sm opacity-75">Imagen ' + (modalImageIndex + 1) + ' de ' + totalImages + '</p>';
+            }, 150);
+          }
+        };
+
+        modalPrevBtn.onclick = (e) => { e.stopPropagation(); changeModalImage('prev'); };
+        modalNextBtn.onclick = (e) => { e.stopPropagation(); changeModalImage('next'); };
+
+        const closeButton = document.createElement('button');
+        closeButton.innerHTML = '✕';
+        closeButton.className = 'absolute top-4 right-4 text-white text-3xl font-bold bg-black bg-opacity-50 rounded-full w-12 h-12 flex items-center justify-center hover:bg-opacity-75 transition-all z-10';
+
+        const closeModal = () => {
+          if (document.body.contains(modal)) {
+            document.body.removeChild(modal);
+            document.body.classList.remove('modal-open');
+            document.removeEventListener('keydown', handleModalKeydown);
+          }
+        };
+
+        const handleModalKeydown = (e) => {
+          if (e.key === 'ArrowLeft') { e.preventDefault(); if (totalImages > 1) changeModalImage('prev'); }
+          if (e.key === 'ArrowRight') { e.preventDefault(); if (totalImages > 1) changeModalImage('next'); }
+          if (e.key === 'Escape') { e.preventDefault(); closeModal(); }
+        };
+
+        modal.addEventListener('click', closeModal);
+        closeButton.addEventListener('click', (e) => { e.stopPropagation(); closeModal(); });
+        document.addEventListener('keydown', handleModalKeydown);
+
+        modal.appendChild(zoomedImage);
+        modal.appendChild(modalPrevBtn);
+        modal.appendChild(modalNextBtn);
+        modal.appendChild(closeButton);
+        modal.appendChild(imageInfo);
+        document.body.appendChild(modal);
+        document.body.classList.add('modal-open');
+      });
+    }
+  });
+</script>
+
+<style>
+  .prose p { margin-bottom: 1rem; line-height: 1.6; }
+  .thumbnail-btn { transition: all 0.2s ease; position: relative; overflow: hidden; }
+  .thumbnail-btn:hover { transform: scale(1.05); box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); }
+  .thumbnail-btn:focus { outline: none; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3); }
+  .thumbnail-btn:active { transform: scale(0.98); }
+  #main-image { transition: opacity 0.3s ease, transform 0.3s ease; }
+  #main-image:hover { transform: scale(1.02); filter: brightness(1.05); }
+  .cursor-zoom-in { cursor: zoom-in; }
+  .scrollbar-thin { scrollbar-width: thin; scrollbar-color: #d1d5db #f3f4f6; }
+  .scrollbar-thin::-webkit-scrollbar { width: 6px; }
+  .scrollbar-thin::-webkit-scrollbar-track { background: #f3f4f6; border-radius: 3px; }
+  .scrollbar-thin::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+  #scroll-up-btn, #scroll-down-btn { transition: all 0.2s ease; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); }
+  #scroll-up-btn:hover:not(:disabled), #scroll-down-btn:hover:not(:disabled) { background-color: #f8fafc; transform: translateY(-1px); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15); }
+  #scroll-up-btn:disabled, #scroll-down-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .flex.gap-4 { min-height: 400px; }
+  .thumbnail-viewport { height: auto; overflow: hidden; }
+  #thumbnails-container { scroll-behavior: smooth; }
+  .thumbnail-btn.border-blue-500 { box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3); }
+  body.modal-open { overflow: hidden; }
+  .fixed.inset-0 { backdrop-filter: blur(4px); }
+  .fixed.inset-0 img { animation: modalFadeIn 0.3s ease-out; }
+  @keyframes modalFadeIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+  @media (max-width: 768px) {
+    .thumbnail-btn { height: 50px; }
+    #main-image { height: 250px; }
+    .flex.gap-4 { flex-direction: column; min-height: auto; }
+    .flex.flex-col.w-20 { width: 100%; }
+    .thumbnail-viewport { flex-direction: row; overflow-x: auto; overflow-y: hidden; gap: 0.5rem; padding-bottom: 0.5rem; }
+    .thumbnail-viewport .thumbnail-btn { min-width: 60px; width: 60px; height: 50px; }
+    .thumbnail-viewport .thumbnail-btn.hidden { display: block; }
+    #scroll-up-btn, #scroll-down-btn { display: none; }
+    .scrollbar-thin { scrollbar-width: none; -ms-overflow-style: none; }
+    .scrollbar-thin::-webkit-scrollbar { display: none; }
+  }
+  @media (max-width: 480px) {
+    .thumbnail-btn { height: 45px; min-width: 50px; width: 50px; }
+    #main-image { height: 200px; }
+    .flex.gap-4 { gap: 0.5rem; }
+  }
+  button:focus-visible { outline: 2px solid #3b82f6; outline-offset: 2px; }
+  @media (hover: none) {
+    .thumbnail-btn:hover { transform: none; }
+    .thumbnail-btn:active { transform: scale(0.95); }
+  }
+</style>

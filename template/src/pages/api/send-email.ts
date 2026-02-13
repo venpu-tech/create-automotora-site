@@ -3,11 +3,41 @@ import { Resend } from "resend";
 
 export const prerender = false;
 
-const resend = new Resend(import.meta.env.RESEND_API_KEY);
-
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, locals }) => {
+  const { env } = (locals as any).runtime;
+  const resend = new Resend(env.RESEND_API_KEY);
   try {
     const data = await request.json();
+
+    // Verificar token de Turnstile
+    const turnstileToken = data["cf-turnstile-response"];
+    if (!turnstileToken) {
+      return new Response(
+        JSON.stringify({ error: "Verificación de seguridad requerida" }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    const turnstileVerify = await fetch(
+      "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          secret: env.TURNSTILE_SECRET_KEY,
+          response: turnstileToken,
+        }),
+      }
+    );
+    const turnstileResult = await turnstileVerify.json() as { success: boolean };
+
+    if (!turnstileResult.success) {
+      return new Response(
+        JSON.stringify({ error: "Verificación de seguridad fallida" }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
     const { name, email, phone, message, plate, saleType } = data;
 
     // Construir el HTML del correo, incluyendo los campos opcionales si existen

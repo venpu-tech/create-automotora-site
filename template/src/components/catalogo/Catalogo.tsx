@@ -1,9 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { VehicleCard } from "../product-card/ProductCard";
-import { fetchAllVehicles } from "../../lib/fetchSliders";
 import { formatPrice } from "../../helpers/formatHelpers";
-import { parsePrice } from "../../helpers/parcePrice";
-import type { Datum } from "../../types/vehicule";
+import type { Vehicle } from "../../types/vehicle";
 
 interface FilterState {
   brand: string;
@@ -13,18 +11,19 @@ interface FilterState {
   };
   fuelType: string;
   transmission: string;
-  milesRange: {
+  kmsRange: {
     min: number;
     max: number;
   };
-  available: boolean | null;
 }
 
 const ITEMS_PER_PAGE = 12;
 
-export function Catalogo() {
-  const [vehicles, setVehicles] = useState<Datum[]>([]);
-  const [loading, setLoading] = useState(true);
+interface CatalogoProps {
+  readonly vehicles: Vehicle[];
+}
+
+export function Catalogo({ vehicles }: CatalogoProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
 
@@ -33,28 +32,12 @@ export function Catalogo() {
     priceRange: { min: 0, max: 100000000 },
     fuelType: "",
     transmission: "",
-    milesRange: { min: 0, max: 500000 },
-    available: null,
+    kmsRange: { min: 0, max: 500000 },
   });
 
-  useEffect(() => {
-    const loadVehicles = async () => {
-      try {
-        const data = await fetchAllVehicles();
-        setVehicles(data);
-      } catch (error) {
-        console.error("Error loading vehicles:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadVehicles();
-  }, []);
-
-  // Obtener valores únicos para los filtros
+  // Unique brand names for filter dropdown
   const uniqueBrands = useMemo(() => {
-    return [...new Set(vehicles.map((v) => v.brand))].sort();
+    return [...new Set(vehicles.map((v) => v.brand.name))].sort();
   }, [vehicles]);
 
   const priceRange = useMemo(() => {
@@ -62,7 +45,7 @@ export function Catalogo() {
       return { min: 0, max: 100000000 };
     }
     const prices = vehicles
-      .map((v) => parsePrice(v.price))
+      .map((v) => v.price)
       .filter((price) => !isNaN(price) && price > 0);
 
     if (prices.length === 0) {
@@ -75,78 +58,71 @@ export function Catalogo() {
     };
   }, [vehicles]);
 
-  const milesRange = useMemo(() => {
+  const kmsRange = useMemo(() => {
     if (vehicles.length === 0) {
       return { min: 0, max: 500000 };
     }
-    const miles = vehicles.map((v) => v.miles).filter((mile) => !isNaN(mile));
+    const kms = vehicles.map((v) => v.kms).filter((km) => !isNaN(km));
     return {
-      min: Math.min(...miles),
-      max: Math.max(...miles),
+      min: Math.min(...kms),
+      max: Math.max(...kms),
     };
   }, [vehicles]);
 
-  // Actualizar filtros cuando cambien los rangos de precio y kilometraje
+  // Update filter ranges when vehicle data is available
   useEffect(() => {
     if (vehicles.length > 0) {
-      setFilters((prev) => {
-        const newFilters = {
-          ...prev,
-          priceRange: {
-            min:
-              prev.priceRange.min === 0 || prev.priceRange.min === 100000000
-                ? priceRange.min
-                : prev.priceRange.min,
-            max:
-              prev.priceRange.max === 100000000 || prev.priceRange.max === 0
-                ? priceRange.max
-                : prev.priceRange.max,
-          },
-          milesRange: {
-            min:
-              prev.milesRange.min === 0 || prev.milesRange.min === 500000
-                ? milesRange.min
-                : prev.milesRange.min,
-            max:
-              prev.milesRange.max === 500000 || prev.milesRange.max === 0
-                ? milesRange.max
-                : prev.milesRange.max,
-          },
-        };
-        return newFilters;
-      });
+      setFilters((prev) => ({
+        ...prev,
+        priceRange: {
+          min:
+            prev.priceRange.min === 0 || prev.priceRange.min === 100000000
+              ? priceRange.min
+              : prev.priceRange.min,
+          max:
+            prev.priceRange.max === 100000000 || prev.priceRange.max === 0
+              ? priceRange.max
+              : prev.priceRange.max,
+        },
+        kmsRange: {
+          min:
+            prev.kmsRange.min === 0 || prev.kmsRange.min === 500000
+              ? kmsRange.min
+              : prev.kmsRange.min,
+          max:
+            prev.kmsRange.max === 500000 || prev.kmsRange.max === 0
+              ? kmsRange.max
+              : prev.kmsRange.max,
+        },
+      }));
     }
   }, [
     vehicles.length,
     priceRange.min,
     priceRange.max,
-    milesRange.min,
-    milesRange.max,
+    kmsRange.min,
+    kmsRange.max,
   ]);
 
-  // Filtrar vehículos
+  // Filter vehicles
   const filteredVehicles = useMemo(() => {
     return vehicles.filter((vehicle) => {
-      const price = parsePrice(vehicle.price);
-
-      // Validar que el precio sea un número válido
-      if (isNaN(price) || price <= 0) return false;
+      if (isNaN(vehicle.price) || vehicle.price <= 0) return false;
 
       return (
-        (filters.brand === "" || vehicle.brand === filters.brand) &&
-        price >= filters.priceRange.min &&
-        price <= filters.priceRange.max &&
-        (filters.fuelType === "" || vehicle.fuelType === filters.fuelType) &&
+        (filters.brand === "" || vehicle.brand.name === filters.brand) &&
+        vehicle.price >= filters.priceRange.min &&
+        vehicle.price <= filters.priceRange.max &&
+        (filters.fuelType === "" || vehicle.fuel === filters.fuelType) &&
         (filters.transmission === "" ||
           vehicle.transmission === filters.transmission) &&
-        vehicle.miles >= filters.milesRange.min &&
-        vehicle.miles <= filters.milesRange.max &&
-        (filters.available === null || vehicle.available === filters.available)
+        vehicle.kms >= filters.kmsRange.min &&
+        vehicle.kms <= filters.kmsRange.max
       );
     });
   }, [vehicles, filters]);
 
-  // Paginación
+  // Pagination
   const totalPages = Math.ceil(filteredVehicles.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const paginatedVehicles = filteredVehicles.slice(
@@ -159,7 +135,7 @@ export function Catalogo() {
       ...prev,
       [filterKey]: value,
     }));
-    setCurrentPage(1); // Reset to first page when filters change
+    setCurrentPage(1);
   };
 
   const clearFilters = () => {
@@ -168,8 +144,7 @@ export function Catalogo() {
       priceRange: { min: priceRange.min, max: priceRange.max },
       fuelType: "",
       transmission: "",
-      milesRange: { min: milesRange.min, max: milesRange.max },
-      available: null,
+      kmsRange: { min: kmsRange.min, max: kmsRange.max },
     });
     setCurrentPage(1);
   };
@@ -177,14 +152,6 @@ export function Catalogo() {
   const formatNumber = (num: number) => {
     return new Intl.NumberFormat("es-CL").format(num);
   };
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-red-400"></div>
-      </div>
-    );
-  }
 
   return (
     <div className="md:w-7xl mx-auto px-4 py-24">
@@ -220,45 +187,6 @@ export function Catalogo() {
               >
                 Limpiar todo
               </button>
-            </div>
-
-            {/* Disponibilidad */}
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-white mb-3">
-                Disponibilidad
-              </h3>
-              <div className="space-y-2">
-                <label className="flex items-center text-gray-300">
-                  <input
-                    type="radio"
-                    name="availability"
-                    checked={filters.available === null}
-                    onChange={() => handleFilterChange("available", null)}
-                    className="mr-2"
-                  />
-                  Todos
-                </label>
-                <label className="flex items-center text-gray-300">
-                  <input
-                    type="radio"
-                    name="availability"
-                    checked={filters.available === true}
-                    onChange={() => handleFilterChange("available", true)}
-                    className="mr-2"
-                  />
-                  Disponibles
-                </label>
-                <label className="flex items-center text-gray-300">
-                  <input
-                    type="radio"
-                    name="availability"
-                    checked={filters.available === false}
-                    onChange={() => handleFilterChange("available", false)}
-                    className="mr-2"
-                  />
-                  Vendidos
-                </label>
-              </div>
             </div>
 
             {/* Marca */}
@@ -342,6 +270,8 @@ export function Catalogo() {
                 <option value="">Todos</option>
                 <option value="Bencina">Bencina</option>
                 <option value="Diesel">Diesel</option>
+                <option value="Híbrido">Híbrido</option>
+                <option value="Eléctrico">Eléctrico</option>
               </select>
             </div>
 
@@ -372,17 +302,17 @@ export function Catalogo() {
               <div className="space-y-3">
                 <div>
                   <label className="block text-sm text-gray-400 mb-1">
-                    Mínimo: {formatNumber(filters.milesRange.min)} km
+                    Mínimo: {formatNumber(filters.kmsRange.min)} km
                   </label>
                   <input
                     type="range"
-                    min={milesRange.min}
-                    max={milesRange.max}
+                    min={kmsRange.min}
+                    max={kmsRange.max}
                     step="10000"
-                    value={filters.milesRange.min}
+                    value={filters.kmsRange.min}
                     onChange={(e) =>
-                      handleFilterChange("milesRange", {
-                        ...filters.milesRange,
+                      handleFilterChange("kmsRange", {
+                        ...filters.kmsRange,
                         min: parseInt(e.target.value),
                       })
                     }
@@ -391,17 +321,17 @@ export function Catalogo() {
                 </div>
                 <div>
                   <label className="block text-sm text-gray-400 mb-1">
-                    Máximo: {formatNumber(filters.milesRange.max)} km
+                    Máximo: {formatNumber(filters.kmsRange.max)} km
                   </label>
                   <input
                     type="range"
-                    min={milesRange.min}
-                    max={milesRange.max}
+                    min={kmsRange.min}
+                    max={kmsRange.max}
                     step="10000"
-                    value={filters.milesRange.max}
+                    value={filters.kmsRange.max}
                     onChange={(e) =>
-                      handleFilterChange("milesRange", {
-                        ...filters.milesRange,
+                      handleFilterChange("kmsRange", {
+                        ...filters.kmsRange,
                         max: parseInt(e.target.value),
                       })
                     }
@@ -409,8 +339,8 @@ export function Catalogo() {
                   />
                 </div>
                 <div className="text-xs text-gray-500">
-                  Rango disponible: {formatNumber(milesRange.min)} -{" "}
-                  {formatNumber(milesRange.max)} km
+                  Rango disponible: {formatNumber(kmsRange.min)} -{" "}
+                  {formatNumber(kmsRange.max)} km
                 </div>
               </div>
             </div>

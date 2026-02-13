@@ -1,5 +1,4 @@
 ---
-
 import Layout from '../layouts/Layout.astro';
 import Hero from '../components/hero-slider/Hero';
 import TextImage from '../components/text-and-image/TextImage.astro';
@@ -7,13 +6,16 @@ import BannerStock from '../components/banner-stock/BannerStock.astro';
 import Brand from '../components/banner-brand/Brand.astro';
 import Testimonials from '../components/testimonials/Testimonials.astro';
 import {FeaturedCars} from '../components/featured-cars/FeaturedCars';
-import wildCard from '../assets/images/wild-cars-mazda.webp';	
+import wildCard from '../assets/images/wild-cars-mazda.webp';
 import Services from '../components/service-cars/Services.astro';
+import { getFeaturedVehicles } from '../lib/api';
+
+const featuredVehicles = await getFeaturedVehicles(10);
 ---
 
 <Layout title="Automotriz Copayapu - Compra, venta y consignación de vehículos" description="Compra y vende vehículos con confianza y seguridad. Descubre nuestro catálogo y contáctanos para más información." image='/copa-logo.webp'>
 	<Hero client:load/>
-	<FeaturedCars client:load />
+	<FeaturedCars vehicles={featuredVehicles} client:load />
 	<!-- <TextImage 
 		title="¿Por qué elegirnos?"
 		subtitle=""

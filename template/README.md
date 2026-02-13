@@ -21,7 +21,7 @@
 📱 **Mobile-First** - Optimizado para dispositivos móviles  
 ⚡ **Carga Ultrarrápida** - Powered by Astro SSR  
 💌 **Sistema de Contacto** - Integración con Resend para emails  
-🛡️ **Anti-Spam** - Protección con hCaptcha  
+🛡️ **Anti-Spam** - Protección con Cloudflare Turnstile  
 🎯 **SEO Optimizado** - Mejor posicionamiento en buscadores  
 🤝 **Partner Confiable** - Más que una automotora, tu aliado automotriz
 
@@ -40,8 +40,8 @@
 ### **Backend & APIs**
 
 - **[Resend 4.6.0](https://resend.com/)** - Servicio de emails transaccionales
-- **[hCaptcha](https://www.hcaptcha.com/)** - Protección anti-spam
-- **[Astro Node 9.3.0](https://docs.astro.build/en/guides/integrations-guide/node/)** - Servidor SSR
+- **[Cloudflare Turnstile](https://developers.cloudflare.com/turnstile/)** - Protección anti-spam
+- **[Astro Cloudflare](https://docs.astro.build/en/guides/integrations-guide/cloudflare/)** - Servidor SSR
 
 ### **Herramientas**
 
@@ -79,11 +79,13 @@ Crea un archivo `.env` en la raíz del proyecto:
 # 📧 Configuración de Resend (para emails)
 RESEND_API_KEY="tu_resend_api_key_aqui"
 
-# 🛡️ Configuración de hCaptcha (anti-spam)
-HCAPTCHA_SITE_KEY="tu_hcaptcha_site_key_aqui"
+# 🛡️ Cloudflare Turnstile (anti-spam)
+PUBLIC_TURNSTILE_SITE_KEY="tu_turnstile_site_key"
+TURNSTILE_SECRET_KEY="tu_turnstile_secret_key"
 
-# 🔑 Token de API (para datos de vehículos)
-PUBLIC_TOKEN="tu_public_token_aqui"
+# 🔑 API Venpu (datos de vehículos)
+VENPU_API_URL="https://api.venpu.cl"
+VENPU_API_KEY="tu_venpu_api_key"
 ```
 
 ### **4. Levantar el Servidor de Desarrollo**
@@ -167,17 +169,23 @@ wildcars/
 - **Obtener**: [Resend Dashboard](https://resend.com/api-keys)
 - **Formato**: `re_xxxxxxxxxx`
 
-### **HCAPTCHA_SITE_KEY**
+### **PUBLIC_TURNSTILE_SITE_KEY**
 
-- **Propósito**: Protección anti-spam en formularios
-- **Obtener**: [hCaptcha Dashboard](https://dashboard.hcaptcha.com/sites)
-- **Formato**: `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`
+- **Propósito**: Protección anti-spam en formularios (client-side)
+- **Obtener**: [Cloudflare Dashboard > Turnstile](https://dash.cloudflare.com/?to=/:account/turnstile)
+- **Formato**: `0x4AAAAAAC...`
 
-### **PUBLIC_TOKEN**
+### **TURNSTILE_SECRET_KEY**
 
-- **Propósito**: Autenticación para API de vehículos
-- **Obtener**: Panel de administración del proveedor
-- **Formato**: String alfanumérico
+- **Propósito**: Verificación server-side del token Turnstile
+- **Obtener**: Mismo widget en Cloudflare Dashboard
+- **Formato**: `0x4AAAAAAC...`
+
+### **VENPU_API_KEY**
+
+- **Propósito**: Autenticación para API de vehículos Venpu
+- **Obtener**: Panel de administración Venpu
+- **Formato**: `vk_live_...`
 
 ---
 
