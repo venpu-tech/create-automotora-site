@@ -1,0 +1,121 @@
+---
+import Footer from '../components/footer/Footer.astro';
+import Navbar from '../components/navbar/Navbar.astro';
+import Whatsapp from '../components/whatsapp-button/Whatsapp.astro';
+import '../styles/global.css';
+
+export interface Props {
+	title?: string;
+	description?: string;
+	image?: string; // Optional image for Open Graph
+}
+
+const { title, description, image } = Astro.props;
+
+// Extraer solo el nombre del archivo de la URL completa
+const getImageFilename = (imageUrl: string) => {
+	// Si la imagen está vacía o undefined, usar la imagen por defecto
+	if (!imageUrl || imageUrl.trim() === '') {
+		return "logo.webp"; // Sin barra inicial
+	}
+	
+	if (imageUrl.includes('digitaloceanspaces.com')) {
+		// Extraer solo el nombre del archivo de la URL completa
+		const parts = imageUrl.split('/');
+		return parts[parts.length - 1];
+	}
+	// Si no es una URL de DigitalOcean, quitar la barra inicial si existe
+	return imageUrl.startsWith('/') ? imageUrl.substring(1) : imageUrl;
+};
+
+const imageFilename = getImageFilename(image || "logo.webp");
+
+// Detectar si estamos en desarrollo o producción
+const isDev = import.meta.env.DEV;
+const apiBaseUrl = isDev ? 'http://localhost:4321' : 'https://www.autoloa.cl';
+
+console.log(`Original image URL: ${image}`);
+console.log(`Extracted filename: ${imageFilename}`);
+console.log(`Environment: ${isDev ? 'development' : 'production'}`);
+console.log(`API Base URL: ${apiBaseUrl}`);
+---
+
+<!doctype html>
+<html lang="es">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="generator" content={Astro.generator} />
+		<meta name="description" content={description} />
+		<meta property="og:image" itemprop="image" content={`${apiBaseUrl}/api/og/${imageFilename}`} />
+		<meta property="og:image:width" content="1200">
+		<meta property="og:image:height" content="630">
+		<meta property="og:image:type" content="image/jpeg">
+		<title>{title}</title>
+		<!-- Font Awesome CDN -->
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+		<!-- hCaptcha Script -->
+		<script src="https://js.hcaptcha.com/1/api.js" async defer></script>
+	</head>
+	<body>
+		<Navbar />
+		<slot />
+		<Whatsapp />
+		<Footer />
+		
+
+		<!-- <div style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; background: white; padding: 10px; border: 2px solid #ccc; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-width: 300px;">
+			<p style="margin: 0 0 10px 0; font-size: 12px; font-weight: bold; color: #333;">
+				🔍 Debug: Open Graph Image
+			</p>
+			<p style="margin: 0 0 8px 0; font-size: 11px; color: #666; word-break: break-all;">
+				<strong>Original:</strong> {image}
+			</p>
+			<p style="margin: 0 0 10px 0; font-size: 11px; color: #666; word-break: break-all;">
+				<strong>Filename:</strong> {imageFilename}
+			</p>
+			
+			<div style="margin-bottom: 15px;">
+				<p style="margin: 0 0 5px 0; font-size: 10px; font-weight: bold; color: #333;">🔗 Direct DigitalOcean:</p>
+				<img 
+					src={image && image.includes('digitaloceanspaces.com') ? image : '/frontis-autoloa.webp'} 
+					alt="Direct test" 
+					style="width: 100%; max-width: 100px; height: auto; border-radius: 4px; border: 1px solid #ddd;"
+					onload="console.log('✅ Direct image loaded:', this.src)"
+					onerror="console.log('❌ Direct image failed:', this.src); this.style.border='2px solid orange'"
+				/>
+			</div>
+			
+
+			<div style="margin-bottom: 10px;">
+				<p style="margin: 0 0 5px 0; font-size: 10px; font-weight: bold; color: #333;">🔄 Via API:</p>
+				<img 
+					src={`${apiBaseUrl}/api/og/${imageFilename}`} 
+					alt={title} 
+					style="width: 100%; max-width: 100px; height: auto; border-radius: 4px; border: 1px solid #ddd;"
+					onload="console.log('✅ OG Image loaded successfully:', this.src)"
+					onerror="console.log('❌ OG Image failed to load:', this.src); this.style.border='2px solid red'; this.style.background='#ffebee'"
+				/>
+			</div>
+			
+			<p style="margin: 5px 0 0 0; font-size: 10px; color: #888; word-break: break-all;">
+				<strong>API URL:</strong> {apiBaseUrl}/api/og/{imageFilename}
+			</p>
+			<button 
+				onclick={`window.open('${apiBaseUrl}/api/og/${imageFilename}', '_blank')`}
+				style="margin-top: 5px; padding: 3px 8px; font-size: 10px; background: #007acc; color: white; border: none; border-radius: 3px; cursor: pointer;">
+				🔗 Abrir API URL
+			</button>
+		</div> -->
+	</body>
+</html>
+
+<style>
+	html,
+	body {
+		margin: 0;
+		width: 100%;
+		height: 100%;
+	}
+</style>

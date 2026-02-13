@@ -1,0 +1,910 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import {fetchAllVehicles, getCarsByIds} from '../../lib/fetchSliders';
+import { formatNameForURL } from "../../helpers/stringHelpers";
+import { formatPrice } from "../../helpers/formatHelpers";
+
+export const prerender = false;
+
+const { name } = Astro.params || {};
+const autos = await fetchAllVehicles();
+const foundVehicle = autos.find(
+  (v) => formatNameForURL(v.name) === name
+);
+
+if (!foundVehicle) {
+  throw new Error(`No se encontró el vehículo con nombre: ${name}`);
+}
+
+const response = await getCarsByIds({ id: String(foundVehicle.id) });
+
+if (!response || !response.status) {
+  throw new Error(`No se encontró el vehículo con ID: ${foundVehicle.id}`);
+}
+
+const vehicle = response.data;
+
+const formattedPrice = formatPrice(vehicle.price);
+
+// Usar imageGallery del vehículo o fallback a imageUrl
+const vehicleImages = vehicle.imageGallery && vehicle.imageGallery.length > 0 
+  ? vehicle.imageGallery.map(img => {
+      if (typeof img === 'string') return img;
+      if (typeof img === 'object' && img !== null) {
+        return (img as any).imageUrl || (img as any).url || vehicle.imageUrl;
+      }
+      return vehicle.imageUrl;
+    }).filter(Boolean)
+  : [vehicle.imageUrl].filter(Boolean);
+
+  const ogImage =vehicleImages[0];
+---
+
+<Layout title={`${vehicle.name} - Auto Loa`} description={`${vehicle.name} - ${formattedPrice}`} image={ogImage}>
+
+  <main class="md:w-7xl mx-auto py-[80px] md:py-[120px] px-5 md:px-10">
+
+     <nav class="text-sm text-gray-600 py-3">
+        <a href="/" class="hover:text-blue-600">Inicio</a>
+        <span class="mx-2">></span>
+        <a href="/catalogo" class="hover:text-blue-600">Vehículos</a>
+        <span class="mx-2">></span>
+        <span class="text-gray-900">{vehicle.name}</span>
+      </nav>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      
+      <!-- Columna Izquierda - Galería de Imágenes -->
+      <div class="lg:col-span-2">
+        <div class="bg-white rounded-lg shadow-sm border-gray-200 border p-4 mb-6">
+          <!-- Galería con Thumbnails al lado izquierdo -->
+          <div class="flex gap-4">
+            <!-- Thumbnails Verticales -->
+            {vehicleImages.length > 1 && (
+              <div class="flex flex-col w-20 md:w-24">
+                <!-- Botón de scroll hacia arriba -->
+                {vehicleImages.length > 6 && (
+                  <button 
+                    id="scroll-up-btn"
+                    class="w-full bg-white hover:bg-gray-50 text-gray-700 py-2 rounded-t border border-gray-100 transition-colors shadow-sm mb-1 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                    aria-label="Ver imágenes anteriores"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+                    </svg>
+                  </button>
+                )}
+                
+                <div class="flex flex-col gap-2 thumbnail-viewport" id="thumbnails-container">
+                  {vehicleImages.map((image, index) => (
+                    <button 
+                      type="button"
+                      class={`thumbnail-btn w-full h-16 md:h-20 rounded border-2 transition-all duration-200 overflow-hidden flex-shrink-0 ${index === 0 ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-100 hover:border-blue-300'} ${index >= 6 ? 'hidden' : ''}`}
+                      data-index={index}
+                      data-image-src={image}
+                      aria-label={`Ver imagen ${index + 1}`}
+                    >
+                      <img 
+                        src={image} 
+                        alt={`${vehicle.name} - Miniatura ${index + 1}`}
+                        class="w-full h-full object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
+                
+                <!-- Botón de scroll hacia abajo -->
+                {vehicleImages.length > 6 && (
+                  <button 
+                    id="scroll-down-btn"
+                    class="w-full bg-white hover:bg-gray-50 text-gray-700 py-2 rounded-b border border-gray-100 transition-colors shadow-sm mt-1 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                    aria-label="Ver más imágenes"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                  </button>
+                )}
+              </div>
+            )}
+
+            <!-- Imagen Principal -->
+            <div class="relative flex-1">
+              <img 
+                id="main-image"
+                src={vehicleImages[0]} 
+                alt={`${vehicle.name} - Auto Loa`}
+                class="w-full h-full object-cover rounded-lg cursor-zoom-in transition-transform duration-300"
+              />
+              
+              <!-- Contador de Imágenes -->
+              {vehicleImages.length > 1 && (
+                <div class="absolute top-4 right-4 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm">
+                  <span id="current-index">1</span> / {vehicleImages.length}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <!-- Características del Vehículo -->
+        <div class="bg-white rounded-lg shadow-sm border-gray-200 border p-6 mb-6">
+          <h2 class="text-2xl font-bold mb-4 text-gray-900">Características</h2>
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div class="flex items-center space-x-2">
+              <span class="text-gray-400">📅</span>
+              <div>
+                <p class="text-sm text-gray-600">Año</p>
+                <p class="font-semibold">{(vehicle as any).year || 'N/A'}</p>
+              </div>
+            </div>
+            <div class="flex items-center space-x-2">
+              <span class="text-gray-400">🚗</span>
+              <div>
+                <p class="text-sm text-gray-600">Kilometraje</p>
+                <p class="font-semibold">{vehicle.miles?.toLocaleString()} km</p>
+              </div>
+            </div>
+            <div class="flex items-center space-x-2">
+              <span class="text-gray-400">⛽</span>
+              <div>
+                <p class="text-sm text-gray-600">Combustible</p>
+                <p class="font-semibold">{vehicle.fuelType}</p>
+              </div>
+            </div>
+            <div class="flex items-center space-x-2">
+              <span class="text-gray-400">⚙️</span>
+              <div>
+                <p class="text-sm text-gray-600">Transmisión</p>
+                <p class="font-semibold">{vehicle.transmission}</p>
+              </div>
+            </div>
+            <div class="flex items-center space-x-2">
+              <span class="text-gray-400">📍</span>
+              <div>
+                <p class="text-sm text-gray-600">Ubicación</p>
+                <p class="font-semibold">{vehicle.vendedor?.sucursal || 'No especificada'}</p>
+              </div>
+            </div>
+            <div class="flex items-center space-x-2">
+              <span class="text-gray-400">🏷️</span>
+              <div>
+                <p class="text-sm text-gray-600">Estado</p>
+                <p class={`font-semibold ${vehicle.available ? 'text-green-600' : 'text-red-600'}`}>
+                  {vehicle.available ? 'Disponible' : 'Vendido'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Descripción -->
+        <div class="bg-white rounded-lg shadow-sm border-gray-200 border p-6">
+          <h2 class="text-2xl font-bold mb-4 text-gray-900">Descripción</h2>
+          <div class="prose max-w-none text-gray-700">
+            <p class="mb-4">
+              {vehicle.description || `Este ${vehicle.name} es una excelente opción para quienes buscan un vehículo confiable y con gran desempeño. Con ${vehicle.miles?.toLocaleString()} kilómetros recorridos y motor ${vehicle.fuelType}, representa una oportunidad única en el mercado.`}
+            </p>
+            <p>
+              El vehículo cuenta con transmisión {vehicle.transmission} y se encuentra en excelentes condiciones. 
+              Ideal para uso familiar o trabajo, combina comodidad, seguridad y eficiencia en un solo paquete.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Columna Derecha - Información de Compra -->
+      <div class="lg:col-span-1">
+        <div class="sticky top-6">
+          <!-- Card de Precio y Compra -->
+          <div class="bg-white rounded-lg shadow-sm border-gray-200 border p-6 mb-6">
+            <div class="mb-4">
+              <h1 class="text-2xl font-bold text-gray-900 mb-2">{vehicle.name}</h1>
+              {vehicle.available ? (
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                  ✓ Disponible
+                </span>
+              ) : (
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                  ✗ Vendido
+                </span>
+              )}
+            </div>
+
+            <div class="mb-6">
+              <p class="text-3xl font-bold text-gray-900">{formattedPrice}</p>
+              <p class="text-sm text-gray-600">Precio final</p>
+            </div>
+
+            <a 
+              href="/contacto" 
+              class={`w-full font-bold py-3 px-4 rounded-lg transition-colors text-center block ${
+                vehicle.available 
+                  ? 'bg-green-600 hover:bg-green-700 text-white' 
+                  : 'bg-gray-400 text-gray-600 cursor-not-allowed'
+              }`}
+            >
+              Contactar vendedor
+            </a>
+          </div>
+
+          <!-- Medios de Pago -->
+          <div class="bg-white rounded-lg shadow-sm border-gray-200 border p-6">
+            <h3 class="text-lg font-bold mb-4">Medios de pago</h3>
+            <div class="space-y-3">
+              <div class="flex items-center space-x-2">
+                <span class="text-green-500">✓</span>
+                <span class="text-sm">Efectivo</span>
+              </div>
+              <div class="flex items-center space-x-2">
+                <span class="text-green-500">✓</span>
+                <span class="text-sm">Transferencia bancaria</span>
+              </div>
+              <div class="flex items-center space-x-2">
+                <span class="text-green-500">✓</span>
+                <span class="text-sm">Financiamiento disponible</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</Layout>
+
+<script is:inline>
+  document.addEventListener('DOMContentLoaded', function() {
+    let currentImageIndex = 0;
+    let currentPage = 0;
+    const thumbnailsPerPage = 6;
+    
+    const mainImage = document.getElementById('main-image');
+    const thumbnails = document.querySelectorAll('.thumbnail-btn');
+    const currentIndexSpan = document.getElementById('current-index');
+    const scrollUpBtn = document.getElementById('scroll-up-btn');
+    const scrollDownBtn = document.getElementById('scroll-down-btn');
+    const thumbnailsContainer = document.getElementById('thumbnails-container');
+    
+    const totalImages = thumbnails.length;
+    const totalPages = Math.ceil(totalImages / thumbnailsPerPage);
+    
+    // Función para mostrar/ocultar thumbnails según la página
+    function showThumbnailsPage(page) {
+      if (page < 0 || page >= totalPages) return;
+      
+      currentPage = page;
+      
+      thumbnails.forEach((thumbnail, index) => {
+        const startIndex = page * thumbnailsPerPage;
+        const endIndex = startIndex + thumbnailsPerPage;
+        
+        if (index >= startIndex && index < endIndex) {
+          thumbnail.classList.remove('hidden');
+        } else {
+          thumbnail.classList.add('hidden');
+        }
+      });
+      
+      // Actualizar estado de los botones
+      updateNavigationButtons();
+    }
+    
+    // Función para actualizar el estado de los botones de navegación
+    function updateNavigationButtons() {
+      if (scrollUpBtn) {
+        scrollUpBtn.disabled = currentPage === 0;
+      }
+      if (scrollDownBtn) {
+        scrollDownBtn.disabled = currentPage === totalPages - 1;
+      }
+    }
+    
+    // Función para scroll en thumbnails (paginación)
+    function scrollThumbnails(direction) {
+      if (direction === 'up' && currentPage > 0) {
+        showThumbnailsPage(currentPage - 1);
+      } else if (direction === 'down' && currentPage < totalPages - 1) {
+        showThumbnailsPage(currentPage + 1);
+      }
+    }
+    
+    // Función para asegurar que el thumbnail activo esté visible
+    function scrollToActiveThumbnail(index) {
+      if (!thumbnailsContainer || !thumbnails[index]) return;
+      
+      // Calcular en qué página debería estar el thumbnail
+      const targetPage = Math.floor(index / thumbnailsPerPage);
+      
+      // Si el thumbnail no está en la página actual, cambiar a la página correcta
+      if (targetPage !== currentPage) {
+        showThumbnailsPage(targetPage);
+      }
+    }
+    
+    // Función para cambiar la imagen principal
+    function changeMainImage(imageSrc, index) {
+      if (!mainImage || index < 0 || index >= totalImages) return;
+      
+      currentImageIndex = index;
+      
+      // Cambiar la imagen principal con fade effect
+      mainImage.style.opacity = '0.5';
+      setTimeout(() => {
+        mainImage.src = imageSrc;
+        mainImage.style.opacity = '1';
+      }, 150);
+      
+      // Actualizar thumbnails
+      thumbnails.forEach((thumbnail, i) => {
+        const isActive = i === index;
+        thumbnail.classList.remove('border-blue-500', 'ring-2', 'ring-blue-200', 'border-gray-100', 'hover:border-blue-300');
+        if (isActive) {
+          thumbnail.classList.add('border-blue-500', 'ring-2', 'ring-blue-200');
+        } else {
+          thumbnail.classList.add('border-gray-100', 'hover:border-blue-300');
+        }
+      });
+      
+      // Actualizar contador
+      if (currentIndexSpan) {
+        currentIndexSpan.textContent = index + 1;
+      }
+      
+      // Asegurar que el thumbnail activo esté visible
+      scrollToActiveThumbnail(index);
+    }
+    
+    // Event listeners para thumbnails
+    thumbnails.forEach((thumbnail, index) => {
+      thumbnail.addEventListener('click', function() {
+        const imageSrc = this.getAttribute('data-image-src');
+        if (imageSrc) {
+          changeMainImage(imageSrc, index);
+        }
+      });
+    });
+    
+    // Event listeners para scroll de thumbnails
+    if (scrollUpBtn) {
+      scrollUpBtn.addEventListener('click', () => scrollThumbnails('up'));
+    }
+    
+    if (scrollDownBtn) {
+      scrollDownBtn.addEventListener('click', () => scrollThumbnails('down'));
+    }
+    
+    // Scroll con rueda del mouse en thumbnails
+    if (thumbnailsContainer) {
+      thumbnailsContainer.addEventListener('wheel', function(e) {
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? 'down' : 'up';
+        scrollThumbnails(delta);
+      });
+    }
+    
+    // Navegación con teclado solo para thumbnails
+    document.addEventListener('keydown', function(e) {
+      switch(e.key) {
+        case 'ArrowUp':
+          e.preventDefault();
+          scrollThumbnails('up');
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          scrollThumbnails('down');
+          break;
+      }
+    });
+    
+    // Inicializar vista de thumbnails
+    if (totalImages > 0) {
+      showThumbnailsPage(0);
+    }
+    
+    // Funcionalidad de zoom para la imagen principal
+    if (mainImage) {
+      mainImage.addEventListener('click', function() {
+        // Crear modal de zoom
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4 cursor-pointer';
+        
+        const zoomedImage = document.createElement('img');
+        zoomedImage.src = this.src;
+        zoomedImage.className = 'max-w-full max-h-full object-contain cursor-default transition-transform duration-300';
+        zoomedImage.onclick = (e) => e.stopPropagation();
+        
+        // Controles de navegación en el modal
+        let modalImageIndex = currentImageIndex;
+        
+        // Botón anterior en modal
+        const modalPrevBtn = document.createElement('button');
+        modalPrevBtn.innerHTML = `
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          </svg>
+        `;
+        modalPrevBtn.className = 'absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-75 text-white p-3 rounded-full transition-all duration-300 z-10';
+        modalPrevBtn.style.display = totalImages > 1 ? 'block' : 'none';
+        
+        // Botón siguiente en modal
+        const modalNextBtn = document.createElement('button');
+        modalNextBtn.innerHTML = `
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+          </svg>
+        `;
+        modalNextBtn.className = 'absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-75 text-white p-3 rounded-full transition-all duration-300 z-10';
+        modalNextBtn.style.display = totalImages > 1 ? 'block' : 'none';
+        
+        // Función para cambiar imagen en el modal
+        const changeModalImage = (direction) => {
+          if (direction === 'next') {
+            modalImageIndex = (modalImageIndex + 1) % totalImages;
+          } else if (direction === 'prev') {
+            modalImageIndex = (modalImageIndex - 1 + totalImages) % totalImages;
+          }
+          
+          const newImageSrc = thumbnails[modalImageIndex]?.getAttribute('data-image-src');
+          if (newImageSrc) {
+            zoomedImage.style.opacity = '0.5';
+            setTimeout(() => {
+              zoomedImage.src = newImageSrc;
+              zoomedImage.style.opacity = '1';
+              
+              // Actualizar también la imagen principal y thumbnails en segundo plano
+              changeMainImage(newImageSrc, modalImageIndex);
+              
+              // Actualizar info de la imagen
+              imageInfo.innerHTML = `<p class="text-lg font-semibold">${thumbnails[modalImageIndex]?.querySelector('img')?.alt || 'Imagen del vehículo'}</p><p class="text-sm opacity-75">Imagen ${modalImageIndex + 1} de ${totalImages}</p>`;
+            }, 150);
+          }
+        };
+        
+        // Event listeners para botones de navegación del modal
+        modalPrevBtn.onclick = (e) => {
+          e.stopPropagation();
+          changeModalImage('prev');
+        };
+        
+        modalNextBtn.onclick = (e) => {
+          e.stopPropagation();
+          changeModalImage('next');
+        };
+        
+        const closeButton = document.createElement('button');
+        closeButton.innerHTML = '✕';
+        closeButton.className = 'absolute top-4 right-4 text-white text-3xl font-bold bg-black bg-opacity-50 rounded-full w-12 h-12 flex items-center justify-center hover:bg-opacity-75 transition-all z-10';
+        
+        const imageInfo = document.createElement('div');
+        imageInfo.className = 'absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white text-center z-10';
+        imageInfo.innerHTML = `<p class="text-lg font-semibold">${mainImage.alt}</p><p class="text-sm opacity-75">Imagen ${currentImageIndex + 1} de ${totalImages}</p>`;
+        
+        // Hint de navegación (solo si hay más de una imagen)
+        const navigationHint = document.createElement('div');
+        if (totalImages > 1) {
+          navigationHint.className = 'modal-navigation-hint';
+          navigationHint.innerHTML = 'Usa ← → para navegar';
+          
+          // Ocultar el hint después de 3 segundos
+          setTimeout(() => {
+            if (navigationHint.parentNode) {
+              navigationHint.style.opacity = '0';
+              setTimeout(() => {
+                if (navigationHint.parentNode) {
+                  navigationHint.parentNode.removeChild(navigationHint);
+                }
+              }, 300);
+            }
+          }, 3000);
+        }
+        
+        // Cerrar modal
+        const closeModal = () => {
+          if (document.body.contains(modal)) {
+            document.body.removeChild(modal);
+            document.body.classList.remove('modal-open');
+            // Remover event listeners del teclado específicos del modal
+            document.removeEventListener('keydown', handleModalKeydown);
+          }
+        };
+        
+        // Navegación con teclado en el modal
+        const handleModalKeydown = (e) => {
+          switch(e.key) {
+            case 'ArrowLeft':
+              e.preventDefault();
+              if (totalImages > 1) changeModalImage('prev');
+              break;
+            case 'ArrowRight':
+              e.preventDefault();
+              if (totalImages > 1) changeModalImage('next');
+              break;
+            case 'Escape':
+              e.preventDefault();
+              closeModal();
+              break;
+          }
+        };
+        
+        modal.addEventListener('click', closeModal);
+        closeButton.addEventListener('click', (e) => {
+          e.stopPropagation();
+          closeModal();
+        });
+        
+        // Agregar event listener para teclado
+        document.addEventListener('keydown', handleModalKeydown);
+        
+        modal.appendChild(zoomedImage);
+        modal.appendChild(modalPrevBtn);
+        modal.appendChild(modalNextBtn);
+        modal.appendChild(closeButton);
+        modal.appendChild(imageInfo);
+        if (totalImages > 1) {
+          modal.appendChild(navigationHint);
+        }
+        document.body.appendChild(modal);
+        document.body.classList.add('modal-open');
+      });
+    }
+  });
+</script>
+
+<style>
+  .prose p {
+    margin-bottom: 1rem;
+    line-height: 1.6;
+  }
+  
+  .thumbnail-btn {
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .thumbnail-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+  
+  .thumbnail-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+  }
+  
+  .thumbnail-btn:active {
+    transform: scale(0.98);
+  }
+  
+  #main-image {
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+  
+  #main-image:hover {
+    transform: scale(1.02);
+  }
+  
+  .cursor-zoom-in {
+    cursor: zoom-in;
+  }
+  
+  /* Scrollbar personalizado para thumbnails */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: #d1d5db #f3f4f6;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: #f3f4f6;
+    border-radius: 3px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 3px;
+    transition: background 0.2s ease;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+  }
+  
+  /* Ocultar scrollbar en móviles */
+  @media (max-width: 768px) {
+    .scrollbar-thin {
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    
+    .scrollbar-thin::-webkit-scrollbar {
+      display: none;
+    }
+  }
+  
+  /* Botones de scroll para thumbnails - Estilo MercadoLibre/Airbnb */
+  #scroll-up-btn,
+  #scroll-down-btn {
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+  
+  #scroll-up-btn:hover:not(:disabled),
+  #scroll-down-btn:hover:not(:disabled) {
+    background-color: #f8fafc;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+  }
+  
+  #scroll-up-btn:active:not(:disabled),
+  #scroll-down-btn:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+  
+  #scroll-up-btn:disabled,
+  #scroll-down-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+  }
+  
+  /* Animaciones suaves para cambios de estado */
+  .transition-gallery {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  /* Efecto de carga para imágenes */
+  .thumbnail-btn img,
+  #main-image {
+    transition: opacity 0.3s ease;
+  }
+  
+  .thumbnail-btn img:not([src]) {
+    opacity: 0;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+  }
+  
+  @keyframes loading {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+  
+  /* Prevenir scroll del body cuando el modal esté abierto */
+  body.modal-open {
+    overflow: hidden;
+  }
+  
+  /* Modal mejorado */
+  .fixed.inset-0 {
+    backdrop-filter: blur(4px);
+  }
+  
+  /* Controles de navegación en el modal */
+  .fixed.inset-0 button[class*="left-4"],
+  .fixed.inset-0 button[class*="right-4"]:not([class*="top-4"]) {
+    backdrop-filter: blur(8px);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+  }
+  
+  .fixed.inset-0 button[class*="left-4"]:hover,
+  .fixed.inset-0 button[class*="right-4"]:not([class*="top-4"]):hover {
+    background-color: rgba(0, 0, 0, 0.8);
+    transform: scale(1.1);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+  
+  .fixed.inset-0 button[class*="left-4"]:active,
+  .fixed.inset-0 button[class*="right-4"]:not([class*="top-4"]):active {
+    transform: scale(0.95);
+  }
+  
+  /* Layout de galería - flex para thumbnails al lado */
+  .flex.gap-4 {
+    min-height: 400px;
+  }
+  
+  /* Viewport de thumbnails con altura fija */
+  .thumbnail-viewport {
+    height: auto;
+    overflow: hidden;
+  }
+  
+  /* Mejorar la visualización en dispositivos móviles */
+  @media (max-width: 768px) {
+    .thumbnail-btn {
+      height: 50px;
+    }
+    
+    #main-image {
+      height: 250px;
+    }
+    
+    .flex.gap-4 {
+      flex-direction: column;
+      min-height: auto;
+    }
+    
+    .flex.flex-col.w-20 {
+      width: 100%;
+      max-height: none;
+    }
+    
+    .thumbnail-viewport {
+      flex-direction: row;
+      overflow-x: auto;
+      overflow-y: hidden;
+      max-height: none;
+      gap: 0.5rem;
+      padding-bottom: 0.5rem;
+    }
+    
+    .thumbnail-viewport .thumbnail-btn {
+      min-width: 60px;
+      width: 60px;
+      height: 50px;
+    }
+    
+    .thumbnail-viewport .thumbnail-btn.hidden {
+      display: block; /* En móvil, mostrar todos los thumbnails */
+    }
+    
+    #scroll-up-btn,
+    #scroll-down-btn {
+      display: none;
+    }
+    
+    .thumbnail-viewport {
+      max-height: none;
+      overflow-x: auto;
+      overflow-y: hidden;
+    }
+    
+    /* Controles de navegación del modal en móvil */
+    .fixed.inset-0 button[class*="left-4"] {
+      left: 1rem;
+      padding: 0.75rem;
+    }
+    
+    .fixed.inset-0 button[class*="right-4"]:not([class*="top-4"]) {
+      right: 1rem;
+      padding: 0.75rem;
+    }
+    
+    .fixed.inset-0 button[class*="left-4"] svg,
+    .fixed.inset-0 button[class*="right-4"]:not([class*="top-4"]) svg {
+      width: 1.5rem;
+      height: 1.5rem;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .thumbnail-btn {
+      height: 45px;
+      min-width: 50px;
+      width: 50px;
+    }
+    
+    #main-image {
+      height: 200px;
+    }
+    
+    .flex.gap-4 {
+      gap: 0.5rem;
+    }
+  }
+  
+  /* Animación para el contador de imágenes */
+  #current-index {
+    transition: all 0.3s ease;
+  }
+  
+  /* Estilos para accesibilidad */
+  button:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+  }
+  
+  /* Mejoras visuales para el contador */
+  .absolute button {
+    backdrop-filter: blur(8px);
+  }
+  
+  /* Efecto hover para la imagen principal */
+  #main-image:hover {
+    filter: brightness(1.05);
+  }
+  
+  /* Animación de entrada para el modal */
+  @keyframes modalFadeIn {
+    from {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  
+  .fixed.inset-0 img {
+    animation: modalFadeIn 0.3s ease-out;
+  }
+  
+  /* Smooth scroll para thumbnails */
+  #thumbnails-container {
+    scroll-behavior: smooth;
+  }
+  
+  /* Destacar thumbnail activo */
+  .thumbnail-btn.border-blue-500 {
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+  }
+  
+  /* Optimización para dispositivos con touch */
+  @media (hover: none) {
+    .thumbnail-btn:hover {
+      transform: none;
+    }
+    
+    .thumbnail-btn:active {
+      transform: scale(0.95);
+    }
+    
+    .scrollbar-thin {
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    
+    .scrollbar-thin::-webkit-scrollbar {
+      display: none;
+    }
+  }
+  
+  /* Animación para cambio de thumbnails */
+  .thumbnail-btn {
+    animation: thumbnailFadeIn 0.3s ease-out;
+  }
+  
+  @keyframes thumbnailFadeIn {
+    from {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  
+  /* Indicador de navegación en modal */
+  .modal-navigation-hint {
+    position: absolute;
+    bottom: 1rem;
+    right: 1rem;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    opacity: 0.8;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+  
+  @media (max-width: 768px) {
+    .modal-navigation-hint {
+      display: none;
+    }
+  }
+</style>

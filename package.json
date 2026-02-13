@@ -1,0 +1,27 @@
+{
+  "name": "@venpu-tech/create-automotora-site",
+  "version": "1.0.0",
+  "description": "CLI para generar sitios web de automotoras a partir de un template Astro + React + TailwindCSS",
+  "type": "module",
+  "bin": {
+    "create-automotora-site": "./bin/create-site.js"
+  },
+  "scripts": {
+    "create": "node bin/create-site.js"
+  },
+  "keywords": [
+    "automotora",
+    "astro",
+    "react",
+    "tailwindcss",
+    "cli",
+    "generator",
+    "venpu"
+  ],
+  "author": "venpu-tech",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/venpu-tech/create-automotora-site.git"
+  }
+}

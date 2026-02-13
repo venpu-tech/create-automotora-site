@@ -1,0 +1,115 @@
+{
+  "name": "Mi Automotora",
+  "slug": "mi-automotora",
+  "domain": "www.miautomotora.cl",
+  "slogan": "Tu automotora de confianza, donde cada vehiculo cuenta una historia.",
+  "aboutText": "En <strong>Mi Automotora</strong> trabajamos con transparencia, experiencia y compromiso. Nuestro objetivo es que cada cliente encuentre su vehiculo ideal con la mejor atencion.",
+
+  "colors": {
+    "tailwind": "blue"
+  },
+
+  "contact": {
+    "address": "Av. Principal 1234, Santiago, Chile",
+    "phones": ["+56 9 1234 5678", "+56 9 8765 4321"],
+    "emails": ["contacto@miautomotora.cl", "ventas@miautomotora.cl"],
+    "hours": {
+      "weekdays": "Lun - Vie: 10:00 - 19:00",
+      "saturday": "Sab: 10:00 - 14:00"
+    },
+    "mapEmbed": "https://www.google.com/maps/embed?pb=!1m18!..."
+  },
+
+  "social": {
+    "facebook": "https://www.facebook.com/miautomotora",
+    "instagram": "https://www.instagram.com/miautomotora"
+  },
+
+  "whatsapp": {
+    "number": "+56912345678",
+    "message": "Hola, en que te podemos ayudar?"
+  },
+
+  "emailService": {
+    "to": ["contacto@miautomotora.cl"],
+    "cc": ["admin@miautomotora.cl"]
+  },
+
+  "seo": {
+    "home": {
+      "title": "Mi Automotora - Compra y venta de vehiculos",
+      "description": "Encuentra tu vehiculo ideal en Mi Automotora. Compra y vende con confianza."
+    },
+    "catalog": {
+      "title": "Catalogo - Mi Automotora",
+      "description": "Explora nuestro catalogo completo de vehiculos."
+    },
+    "contact": {
+      "title": "Contacto - Mi Automotora",
+      "description": "Contactanos para mas informacion sobre nuestros vehiculos."
+    },
+    "about": {
+      "title": "Nosotros - Mi Automotora",
+      "description": "Conoce mas sobre Mi Automotora y nuestro equipo."
+    }
+  },
+
+  "testimonials": [
+    {
+      "name": "Juan Perez",
+      "text": "Excelente servicio, muy recomendable. Me ayudaron en todo el proceso.",
+      "rating": 5
+    },
+    {
+      "name": "Maria Gonzalez",
+      "text": "Encontre el auto perfecto para mi familia. Muy contenta con la atencion.",
+      "rating": 5
+    },
+    {
+      "name": "Carlos Rodriguez",
+      "text": "Profesionales y transparentes. Volveria a comprar sin duda.",
+      "rating": 4
+    }
+  ],
+
+  "services": [
+    {
+      "title": "Financiamiento Flexible",
+      "description": "Opciones de credito adaptadas a ti.",
+      "image": "/image-service-01.webp"
+    },
+    {
+      "title": "Certificacion de Vehiculos",
+      "description": "Todos nuestros autos pasan por revision profesional.",
+      "image": "/image-service-02.webp"
+    },
+    {
+      "title": "Atencion Personalizada",
+      "description": "Te acompanamos en todo el proceso.",
+      "image": "/image-service-03.webp"
+    }
+  ],
+
+  "heroSlides": [
+    {
+      "title": "Bienvenido a Mi Automotora",
+      "subtitle": "Tu proximo auto te esta esperando"
+    },
+    {
+      "title": "Calidad Premium",
+      "subtitle": "Los mejores vehiculos del mercado"
+    },
+    {
+      "title": "Amplio Inventario",
+      "subtitle": "Miles de opciones para elegir"
+    },
+    {
+      "title": "Encuentra tu Auto Ideal",
+      "subtitle": "Autos de las mejores marcas"
+    },
+    {
+      "title": "Financiamiento Facil",
+      "subtitle": "Planes de pago que se adaptan a ti"
+    }
+  ]
+}

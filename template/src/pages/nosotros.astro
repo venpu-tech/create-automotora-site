@@ -1,0 +1,91 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { Image } from 'astro:assets';
+import wildCard from '../assets/images/wild-cars-mazda.webp';	
+---
+
+<Layout title="Nosotros - Automotriz Copayapu" description="Conoce más sobre Automotriz Copayapu, tu automotora de confianza especializada en vehículos" image="/frontis.jpg">
+
+
+  <!-- Nuestra Historia -->
+  <section class="py-30 md:py-50 bg-white">
+    <div class="md:w-7xl mx-auto px-4 sm:px-6 lg:px-0">
+      <div class="grid lg:grid-cols-2 gap-16 items-center">
+        <div>
+          <div class="inline-flex items-center px-4 py-2 bg-red-50 text-red-600 rounded-full text-sm font-medium mb-6">
+            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            Nuestra Historia
+          </div>
+          
+          <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+            Más que una automotora, tu partner confiable.
+          </h2>
+          
+          <p class="text-lg text-gray-600 mb-6 leading-relaxed">
+            En <strong>Automotriz Copayapu</strong> En Copayapu Automotriz trabajamos con transparencia, experiencia y compromiso. Nuestro objetivo es que cada cliente encuentre su vehículo ideal con la mejor atención del norte de Chile.
+          
+          <p class="text-lg text-gray-600 mb-6 leading-relaxed">
+            Nos especializamos en la compra y venta de vehículos seleccionados, con una mirada honesta y profesional que prioriza tu tranquilidad. Cada auto que ofrecemos ha sido evaluado minuciosamente para cumplir con altos estándares de calidad.
+          </p>
+          
+          <p class="text-lg text-gray-600 mb-6 leading-relaxed">
+            Ya sea que estés buscando renovar tu vehículo, vender el que tienes o encontrar ese auto que siempre soñaste, en Wildcars lo hacemos fácil, claro y rápido.
+          </p>
+          
+          <div class="bg-gradient-to-r from-red-50 to-red-100 p-6 rounded-lg border-l-4 border-red-500 mb-8">
+            <p class="text-lg font-semibold text-gray-800 italic">
+              "Bienvenido a la experiencia Wildcars. Donde los buenos autos encuentran buenos dueños."
+            </p>
+          </div>
+          
+          <div class="flex flex-col sm:flex-row gap-4">
+            <a href="/catalogo" class="inline-flex items-center justify-center px-6 py-3 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors">
+              Ver Catálogo
+              <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+              </svg>
+            </a>
+            <a href="/contacto" class="inline-flex items-center justify-center px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg font-medium hover:border-red-600 hover:text-red-600 transition-colors">
+              Contáctanos
+            </a>
+          </div>
+        </div>
+        
+        <div class="relative">
+          <div class="aspect-w-4 aspect-h-3 rounded-2xl overflow-hidden bg-gradient-to-br from-red-100 to-red-200">
+            <!-- Placeholder for company image -->
+            <div class="flex items-center justify-center">
+              <Image src={wildCard} alt="automotora Wildcars" class="w-full h-full object-cover" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- CTA Section -->
+  <section class="py-20 bg-gradient-to-r from-red-600 to-red-700">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <h2 class="text-3xl md:text-4xl font-bold text-white mb-6">
+        ¿Listo para encontrar tu vehículo ideal?
+      </h2>
+      <p class="text-xl text-red-100 mb-8 max-w-3xl mx-auto">
+        Únete a miles de clientes satisfechos que han confiado en Wildcars para hacer realidad sus sueños automotrices
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="/catalogo" class="inline-flex items-center justify-center px-8 py-4 bg-white text-red-600 rounded-lg font-bold text-lg hover:bg-gray-100 transition-colors">
+          Ver Catálogo
+          <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+          </svg>
+        </a>
+        <a href="/contacto" class="inline-flex items-center justify-center px-8 py-4 border-2 border-white text-white rounded-lg font-bold text-lg hover:bg-white hover:text-red-600 transition-colors">
+          Contáctanos Hoy
+        </a>
+      </div>
+    </div>
+  </section>
+</Layout>

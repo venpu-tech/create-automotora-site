@@ -1,0 +1,165 @@
+---
+interface Props {
+    title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<div class="w-full bg-[#020617] relative min-h-[100px]">
+  
+  <div class="banner-content">
+      <h2>{title}</h2>
+      <a href="/vehicles" class="arrows-container">
+          <div class="arrow"></div>
+          <div class="arrow"></div>
+          <div class="arrow"></div>
+      </a>
+  </div>
+</div>
+
+<style>
+    .banner-stock {
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        padding: 20px; 
+        height: 140px;
+        overflow: hidden;
+    }
+    
+    .gradient-bg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 0;
+    }
+    
+    .banner-content {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: row;
+        gap: 12px;
+        height: 100px;
+        width: 100%;
+        padding: 0 16px;
+    }
+    
+    /* Responsive para móviles */
+    @media (max-width: 640px) {
+        .banner-content {
+            flex-direction: column;
+            gap: 8px;
+            height: 120px;
+            padding: 0 12px;
+        }
+    }
+    
+    .banner-content h2 {
+        margin: 0;
+        font-size: clamp(24px, 5vw, 44px);
+        font-weight: bold;
+        color: white;
+        text-align: center;
+        line-height: 1.2;
+    }
+    
+    /* Tamaño específico para móviles */
+    @media (max-width: 480px) {
+        .banner-content h2 {
+            font-size: 22px;
+        }
+    }
+    
+    .arrows-container {
+        display: flex;
+        gap: 6px;
+        text-decoration: none;
+        padding: 8px;
+        flex-shrink: 0;
+    }
+    
+    /* Responsive para móviles */
+    @media (max-width: 640px) {
+        .arrows-container {
+            gap: 4px;
+            padding: 4px;
+        }
+    }
+    
+    .arrow {
+        width: 0;
+        height: 0;
+        border-left: 12px solid #ec4899;
+        border-top: 8px solid transparent;
+        border-bottom: 8px solid transparent;
+        animation: arrowPulse 1.5s infinite;
+        transition: all 0.3s ease;
+    }
+    
+    /* Flechas más pequeñas en móviles */
+    @media (max-width: 640px) {
+        .arrow {
+            border-left: 10px solid #ec4899;
+            border-top: 6px solid transparent;
+            border-bottom: 6px solid transparent;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .arrow {
+            border-left: 8px solid #ec4899;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+        }
+    }
+    
+    .arrow:nth-child(1) {
+        animation-delay: 0s;
+    }
+    
+    .arrow:nth-child(2) {
+        animation-delay: 0.3s;
+    }
+    
+    .arrow:nth-child(3) {
+        animation-delay: 0.6s;
+    }
+    
+    @keyframes arrowPulse {
+        0%, 100% {
+            border-left-color: #ffdaec;
+            transform: scale(1);
+        }
+        50% {
+            border-left-color: #cf1a69;
+            transform: scale(1.15);
+        }
+    }
+    
+    /* Animación más sutil en móviles */
+    @media (max-width: 640px) {
+        @keyframes arrowPulse {
+            0%, 100% {
+                border-left-color: #ffdaec;
+                transform: scale(1);
+            }
+            50% {
+                border-left-color: #cf1a69;
+                transform: scale(1.1);
+            }
+        }
+    }
+    
+    .arrows-container:hover .arrow {
+        border-left-color: #be185d;
+        animation-play-state: paused;
+    }
+</style>

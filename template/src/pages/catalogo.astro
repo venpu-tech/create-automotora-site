@@ -1,0 +1,11 @@
+---
+import Layout from '../layouts/Layout.astro';
+import {Catalogo as CatalogoComponent} from '../components/catalogo/Catalogo';
+import "../styles/global.css";
+
+---
+<Layout title="Catálogo - Somos Expertos en vehículos 4x4" description="Catálogo de vehículos 4x4" image="/frontis-autoloa.webp">
+  <main>
+      <CatalogoComponent client:load />
+  </main>
+</Layout>

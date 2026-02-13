@@ -1,0 +1,61 @@
+---
+import { Image } from 'astro:assets';
+
+import falabella from '../../assets/brands/Banco-falabella.png';
+import santander from '../../assets/brands/Santander-finance.png';
+import tanner from '../../assets/brands/Tanner.png';
+import unidad from '../../assets/brands/Unidad-financiera.png';
+import venpu from '../../assets/brands/Venpu.png';
+
+
+const brands = [
+  {
+    name: 'Banco Falabella',
+    logo: falabella,
+    alt: 'Banco Falabella Logo'
+  },
+
+  {
+    name: 'Santander Finance',      
+    logo: santander,  
+    alt: 'Tanner Logo' 
+  },  
+  {
+    name: 'Tanner',      
+    logo: tanner,  
+    alt: 'Santander Logo' 
+  },
+  {
+    name: 'Unidad',      
+    logo: unidad,  
+    alt: 'Unidad Logo' 
+  }, 
+  {
+    name: 'Venpu',
+    logo: venpu,
+    alt: 'Venpu Logo'
+  }
+];
+---
+
+
+<div class="bg-white py-24 sm:py-32">
+  <div class="max-w-7xl mx-auto px-6 lg:px-8">
+    <h2 class="text-center font-semibold text-black text-2xl sm:text-4xl">Nuestros Partners</h2>
+    <div class="mx-auto mt-10 grid grid-cols-2 items-center gap-x-4 gap-y-10 sm:grid-cols-5 lg:grid-cols-5">
+    
+      {brands.map((brand) => (
+        <div class="flex items-center justify-center">
+          <Image
+            class=" w-full object-contain"
+            src={brand.logo ?? ''}
+            alt={brand.alt ?? ''}
+            width={220}
+            height={90}
+          />
+        </div>
+      ))}
+      
+    </div>
+  </div>
+</div>

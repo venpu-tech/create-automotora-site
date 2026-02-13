@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+/*css menú móvil*/
+
+.hamburger {
+  padding-right: 20px;
+  cursor: pointer;
+}
+
+.hamburger .line {
+  display: block;
+  width: 37px;
+  height: 5px;
+  margin-bottom: 6px;
+  background-color: #ff3c00;
+}
+
+@media screen and (min-width: 960px) {
+  .hamburger {
+    display: none;
+  }
+}
+/* Global styles */
