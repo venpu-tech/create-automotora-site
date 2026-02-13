@@ -805,8 +805,10 @@ async function createEnvFile(dir, turnstileKeys) {
   let content = `VENPU_API_URL="https://api.venpu.cl"\nVENPU_API_KEY=""\n`;
   if (turnstileKeys) {
     content += `PUBLIC_TURNSTILE_SITE_KEY="${turnstileKeys.sitekey}"\n`;
+    content += `TURNSTILE_SECRET_KEY="${turnstileKeys.secret}"\n`;
   } else {
     content += `PUBLIC_TURNSTILE_SITE_KEY=""\n`;
+    content += `TURNSTILE_SECRET_KEY=""\n`;
   }
   await writeFile(path.join(dir, ".env"), content);
 }
