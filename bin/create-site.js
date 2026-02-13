@@ -802,11 +802,11 @@ async function applyGlobalColors(dir, colorReplacements) {
 // ENV FILE
 // ═══════════════════════════════════════════════════════
 async function createEnvFile(dir, turnstileKeys) {
-  let content = `VENPU_API_URL="https://api.venpu.cl"\nVENPU_API_KEY=""\nRESEND_API_KEY=""\n`;
+  let content = `VENPU_API_URL="https://api.venpu.cl"\nVENPU_API_KEY=""\n`;
   if (turnstileKeys) {
-    content += `PUBLIC_TURNSTILE_SITE_KEY="${turnstileKeys.sitekey}"\nTURNSTILE_SECRET_KEY="${turnstileKeys.secret}"\n`;
+    content += `PUBLIC_TURNSTILE_SITE_KEY="${turnstileKeys.sitekey}"\n`;
   } else {
-    content += `PUBLIC_TURNSTILE_SITE_KEY=""\nTURNSTILE_SECRET_KEY=""\n`;
+    content += `PUBLIC_TURNSTILE_SITE_KEY=""\n`;
   }
   await writeFile(path.join(dir, ".env"), content);
 }
@@ -897,7 +897,7 @@ function printSummary(config) {
   Proximos pasos:
     cd ${config.slug}
     npm install
-    # Configurar variables en .env (VENPU_API_KEY, RESEND_API_KEY)
+    # Configurar variables en .env (VENPU_API_KEY)
     npm run dev
 
   Imagenes por reemplazar:

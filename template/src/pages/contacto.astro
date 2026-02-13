@@ -256,7 +256,7 @@ const turnstileSiteKey: string = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? ''
     formStatus.className = 'text-gray-600 text-center p-4 bg-gray-50 rounded-xl';
 
     try {
-      const response = await fetch('/api/send-email', {
+      const response = await fetch('/api/send-lead', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
