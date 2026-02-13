@@ -147,8 +147,12 @@ El color por defecto del template es `red`. Si se elige otro color, el CLI reemp
 - **API venpu.cl** — Datos de vehiculos (stock, destacados, detalle)
 - **Vercel** — Despliegue con adaptador SSR
 
+## Notas importantes
+
+**API venpu.cl es el backend LEGACY de Venpu.** Todos los sitios generados dependen de `https://venpu.cl/api/cars/...` para obtener datos de vehiculos. Esta API es parte del sistema legacy y no esta confirmado que el equipo la haya considerado en la migracion al nuevo sistema. Si esta API se depreca o cambia, los sitios dejan de mostrar vehiculos. Tener esto en cuenta al generar sitios nuevos y verificar que la API sigue operativa.
+
 ## Limitaciones actuales
 
-- El template base soporta 1 sucursal. Para multi-sucursal, usar el proyecto `doble-traccion` como referencia.
+- El template base soporta 1 sucursal. Para multi-sucursal, usar el proyecto `doble-traccion` del repo `webs-clientes` como referencia.
 - Las imagenes del hero slider (`slide-01.jpg` a `slide-05.jpg`) deben reemplazarse manualmente o con IA generativa.
-- El CLI reemplaza textos conocidos del template. Si wildcars cambia, actualizar `template/`.
+- El CLI reemplaza textos conocidos del template. Si el template base cambia, actualizar `template/`.
